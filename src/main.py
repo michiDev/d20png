@@ -11,6 +11,17 @@ def generate_d20_image():
     # Open an existing PNG image
     image = Image.open('d20blank.png')
     image = image.rotate(180)
+    
+    # Create a new image with white background
+    if image.mode in ('RGBA', 'LA'):
+        # Create a white background image
+        background = Image.new('RGB', image.size, (255, 255, 255))
+        # Paste the original image onto the white background
+        background.paste(image, mask=image.split()[-1] if image.mode == 'RGBA' else None)
+        image = background
+    elif image.mode == 'P':
+        # Convert palette mode to RGB with white background
+        image = image.convert('RGB')
 
     # Create a drawing context
     draw = ImageDraw.Draw(image)
