@@ -5,8 +5,9 @@ from fastapi import FastAPI
 from fastapi.responses import StreamingResponse
 
 app = FastAPI(title="D20 PNG Generator", description="Generate random D20 dice images")
+id_cache = {}
 
-def generate_d20_image():
+def generate_d20_image(number):
     """Generate a random D20 dice image and return it as bytes"""
     # Open an existing PNG image
     image = Image.open('d20blank.png')
@@ -27,7 +28,7 @@ def generate_d20_image():
     draw = ImageDraw.Draw(image)
 
     # Add text to the image
-    text = str(random.randint(1, 20))
+    text = str(number)
     font = ImageFont.truetype("arial.ttf", 90)
     img_width, img_height = image.size
     bbox = draw.textbbox((0, 0), text, font=font)
@@ -58,9 +59,17 @@ async def root():
     }
 
 @app.get("/d20")
-async def get_d20_image():
+async def get_d20_image(id = None):
     """Generate and return a random D20 dice image"""
-    img_buffer = generate_d20_image()
+    global id_cache
+    if id is None:
+        print(id)
+        img_buffer = generate_d20_image(random.randint(1, 20))
+    elif id in id_cache:
+        img_buffer = generate_d20_image(id_cache[id]) 
+    else:
+        id_cache[id] = random.randint(1, 20)
+        img_buffer = generate_d20_image(id_cache[id])
     
     return StreamingResponse(
         io.BytesIO(img_buffer.getvalue()),
